@@ -40,8 +40,10 @@ export default function ProfilePage() {
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-
       const publicUrl = urlData.publicUrl;
+
+      console.log('[Avatar] Uploaded, public URL:', publicUrl);
+
       const { error: dbError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id);
       if (dbError) throw dbError;
 
@@ -51,7 +53,13 @@ export default function ProfilePage() {
 
       setAvatarFile(null);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to upload avatar');
+      const msg = err instanceof Error ? err.message : 'Failed to upload avatar';
+      console.error('[Avatar] Upload failed:', msg);
+      if (msg.includes('bucket') || msg.includes('Bucket') || msg.includes('not found')) {
+        alert('Storage bucket "avatars" not found. Run migration-007-avatars-bucket.sql in your Supabase SQL Editor.');
+      } else {
+        alert(msg);
+      }
     } finally {
       setUploading(false);
     }

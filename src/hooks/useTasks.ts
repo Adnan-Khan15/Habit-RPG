@@ -134,6 +134,9 @@ export function useTasks(type?: Task['type']) {
           .eq('id', user.id);
       }
     },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+    },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });

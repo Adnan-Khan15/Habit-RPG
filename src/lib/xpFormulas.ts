@@ -42,11 +42,6 @@ export function calculateLevel(xp: number): number {
   return Math.min(level, 50);
 }
 
-export function calculateLevelProgress(xp: number, level: number): number {
-  const xpForNext = xpRequiredForLevel(level + 1);
-  return xp / xpForNext;
-}
-
 export function addXpToLevel(
   currentLevel: number,
   currentXp: number,

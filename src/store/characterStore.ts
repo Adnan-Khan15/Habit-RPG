@@ -31,6 +31,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
     set({
       profile,
       isFaint: profile ? profile.hp <= 0 : false,
+      xpBoostUntil: profile?.xp_boost_until ?? null,
     }),
   setEquippedGear: (equippedGear) => set({ equippedGear }),
   setLevelingUp: (isLevelingUp) => set({ isLevelingUp }),

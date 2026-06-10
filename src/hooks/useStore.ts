@@ -57,6 +57,7 @@ export function useStore() {
         .from('profiles')
         .update({ gold: charProfile.gold - item.gold_cost })
         .eq('id', user.id);
+      useCharacterStore.getState().addGold(-item.gold_cost);
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['inventory', user?.id] });
@@ -104,6 +105,10 @@ export function useStore() {
         healHp(20);
       } else if (itemId === 'xp_boost') {
         const until = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+        await supabase
+          .from('profiles')
+          .update({ xp_boost_until: until })
+          .eq('id', user.id);
         setXpBoostUntil(until);
       } else if (itemId === 'name_change_token') {
         // handled in UI with prompt before calling mutation

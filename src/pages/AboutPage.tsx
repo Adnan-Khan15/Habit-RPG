@@ -235,7 +235,7 @@ export default function AboutPage() {
       <div className="text-center pt-4 pb-8 border-t border-border">
         <p className="text-xs text-text-muted">
           Habit RPG — v1.0.0<br />
-          Built with React, Vite, Supabase, Tailwind, and Phaser.js
+          Built with React, Vite, Supabase, Tailwind, and SVG
         </p>
       </div>
     </div>

@@ -17,9 +17,9 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'any',
         icons: [
-          { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/svg+xml' },
-          { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/svg+xml' },
-          { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/svg+xml', purpose: 'maskable' },
+          { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {

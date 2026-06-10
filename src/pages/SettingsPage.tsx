@@ -1,12 +1,13 @@
 import { useState } from 'react';
+import { useCharacterStore } from '../store/characterStore';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../lib/supabase';
 
 export default function SettingsPage() {
-  const profile = useAuthStore((s) => s.profile);
+  const profile = useCharacterStore((s) => s.profile);
   const signOut = useAuthStore((s) => s.signOut);
-  const [resetTime, setResetTime] = useState(profile?.daily_reset_time ?? '00:00');
+  const [resetTime, setResetTime] = useState(profile?.daily_reset_time?.slice(0, 5) ?? '00:00');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [saving, setSaving] = useState(false);
 

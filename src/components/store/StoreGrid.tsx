@@ -34,9 +34,9 @@ export function StoreGrid() {
       const newName = prompt('Enter a new display name (max 20 chars):');
       if (!newName || !newName.trim()) return;
       const name = newName.trim().slice(0, 20);
-      await useConsumable.mutateAsync(itemId);
       if (user && profile) {
         await supabase.from('profiles').update({ display_name: name }).eq('id', user.id);
+        await useConsumable.mutateAsync(itemId);
         addToast({ type: 'success', title: `Renamed to ${name}!` });
       }
     } else if (itemId === 'xp_boost') {

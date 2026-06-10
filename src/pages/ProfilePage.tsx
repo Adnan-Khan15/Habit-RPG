@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuthStore } from '../store/authStore';
+import { useCharacterStore } from '../store/characterStore';
 import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { UserAchievement } from '../types';
 
 export default function ProfilePage() {
-  const profile = useAuthStore((s) => s.profile);
+  const profile = useCharacterStore((s) => s.profile);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 

@@ -46,6 +46,7 @@ export interface Profile {
   referral_code: string | null;
   referred_by: string | null;
   rewarded_milestones: number[];
+  xp_boost_until: string | null;
   created_at: string;
 }
 

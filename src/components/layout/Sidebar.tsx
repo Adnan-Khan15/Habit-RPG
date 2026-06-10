@@ -10,6 +10,7 @@ const navItems = [
   { to: '/dashboard/social', label: 'Social', icon: '👥' },
   { to: '/dashboard/profile', label: 'Profile', icon: '👤' },
   { to: '/dashboard/settings', label: 'Settings', icon: '⚙️' },
+  { to: '/dashboard/about', label: 'About', icon: '📖' },
 ];
 
 export function Sidebar() {

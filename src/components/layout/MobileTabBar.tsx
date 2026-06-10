@@ -6,6 +6,7 @@ const tabs = [
   { to: '/dashboard/store', label: 'Store', icon: '🏪' },
   { to: '/dashboard/social', label: 'Social', icon: '👥' },
   { to: '/dashboard/profile', label: 'Profile', icon: '⚙️' },
+  { to: '/dashboard/about', label: 'About', icon: '📖' },
 ];
 
 export function MobileTabBar() {

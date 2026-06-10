@@ -12,8 +12,7 @@ export function checkAchievements(
     currentStreak?: number;
     longestStreak?: number;
     friendsCount?: number;
-    hasPurchased?: boolean;
-    shopPurchases?: number;
+    ownedItemCount?: number;
     leaderboardRank?: number;
   }
 ): AchievementCheckResult {
@@ -46,12 +45,12 @@ export function checkAchievements(
     newlyUnlocked.push('max_level');
   }
 
-  if (!unlocked('shopaholic') && (context.shopPurchases ?? 0) >= 5) {
+  if (!unlocked('shopaholic') && (context.ownedItemCount ?? 0) >= 5) {
     newlyUnlocked.push('shopaholic');
   }
 
-  if (!unlocked('patron') && context.hasPurchased) {
-    newlyUnlocked.push('patron');
+  if (!unlocked('collector') && (context.ownedItemCount ?? 0) >= 10) {
+    newlyUnlocked.push('collector');
   }
 
   if (!unlocked('social_butterfly') && (context.friendsCount ?? 0) >= 5) {

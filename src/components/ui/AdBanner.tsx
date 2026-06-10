@@ -1,27 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useAuthStore } from '../../store/authStore';
+import { useEffect } from 'react';
 
 export function AdBanner() {
-  const profile = useAuthStore((s) => s.profile);
-  const [hasPurchase, setHasPurchase] = useState(false);
-
   useEffect(() => {
-    if (!profile) return;
-    import('../../lib/supabase').then(({ supabase }) => {
-      supabase
-        .from('stripe_purchases')
-        .select('id')
-        .eq('user_id', profile.id)
-        .eq('status', 'completed')
-        .limit(1)
-        .then(({ data }) => {
-          setHasPurchase((data?.length ?? 0) > 0);
-        });
-    });
-  }, [profile]);
-
-  useEffect(() => {
-    if (hasPurchase) return;
     const timer = setTimeout(() => {
       try {
         ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
@@ -30,9 +10,7 @@ export function AdBanner() {
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [hasPurchase]);
-
-  if (hasPurchase) return null;
+  }, []);
 
   return (
     <div className="w-full min-h-[90px] bg-bg-card rounded-lg border border-border flex items-center justify-center overflow-hidden">

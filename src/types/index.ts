@@ -12,11 +12,18 @@ export type TaskPriority = 'low' | 'normal' | 'high';
 
 export type FriendStatus = 'pending' | 'accepted' | 'blocked';
 
-export type PurchaseStatus = 'pending' | 'completed' | 'refunded';
-
-export type AcquiredVia = 'gold_shop' | 'stripe' | 'reward' | 'referral';
+export type AcquiredVia = 'gold_shop' | 'reward' | 'referral';
 
 export type ThemeMode = 'dark' | 'light' | 'oled';
+
+export const LEVEL_MILESTONES = [10, 20, 30] as const;
+export type LevelMilestone = typeof LEVEL_MILESTONES[number];
+
+export const MILESTONE_REWARDS: Record<LevelMilestone, string[]> = {
+  10: ['head_shadow', 'body_shadow', 'weapon_shadow', 'accessory_shadow'],
+  20: ['head_celestial', 'body_celestial', 'weapon_celestial', 'accessory_celestial'],
+  30: ['head_dragon', 'body_dragon', 'weapon_dragon', 'accessory_dragon'],
+};
 
 export interface Profile {
   id: string;
@@ -38,6 +45,7 @@ export interface Profile {
   is_public: boolean;
   referral_code: string | null;
   referred_by: string | null;
+  rewarded_milestones: number[];
   created_at: string;
 }
 
@@ -55,6 +63,8 @@ export interface Task {
   tags: string[];
   is_completed: boolean;
   is_active: boolean;
+  daily_target: number | null;
+  daily_progress: number;
   created_at: string;
   updated_at: string;
 }
@@ -109,20 +119,9 @@ export interface ItemCatalogue {
   slot: GearSlot | 'consumable' | null;
   rarity: Rarity;
   gold_cost: number | null;
-  stripe_pack_id: string | null;
+  unlock_level: number | null;
   sprite_key: string | null;
   icon_url: string | null;
-}
-
-export interface StripePurchase {
-  id: string;
-  user_id: string;
-  stripe_session_id: string;
-  stripe_payment_intent: string | null;
-  pack_id: string;
-  amount_cents: number;
-  status: PurchaseStatus;
-  created_at: string;
 }
 
 export interface Friendship {

@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   is_public BOOL DEFAULT true,
   referral_code TEXT UNIQUE,
   referred_by UUID REFERENCES profiles(id),
+  rewarded_milestones INT[] DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -49,6 +50,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   due_date DATE,
   priority TEXT DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high')),
   tags TEXT[] DEFAULT '{}',
+  daily_target INT,
+  daily_progress INT DEFAULT 0,
   is_completed BOOL DEFAULT false,
   is_active BOOL DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now(),
@@ -104,7 +107,7 @@ CREATE TABLE IF NOT EXISTS items_catalogue (
   slot TEXT CHECK (slot IN ('head', 'body', 'weapon', 'accessory', 'consumable')),
   rarity TEXT DEFAULT 'common' CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
   gold_cost INT,
-  stripe_pack_id TEXT,
+  unlock_level INT,
   sprite_key TEXT,
   icon_url TEXT
 );
@@ -121,7 +124,7 @@ CREATE TABLE IF NOT EXISTS inventory (
   item_id TEXT NOT NULL REFERENCES items_catalogue(id),
   quantity INT DEFAULT 1,
   acquired_at TIMESTAMPTZ DEFAULT now(),
-  acquired_via TEXT DEFAULT 'gold_shop' CHECK (acquired_via IN ('gold_shop', 'stripe', 'reward', 'referral'))
+  acquired_via TEXT DEFAULT 'gold_shop' CHECK (acquired_via IN ('gold_shop', 'reward', 'referral'))
 );
 
 ALTER TABLE inventory ENABLE ROW LEVEL SECURITY;
@@ -143,24 +146,7 @@ ALTER TABLE equipped_gear ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage own equipped gear" ON equipped_gear
   FOR ALL USING (auth.uid() = user_id);
 
--- 8. STRIPE PURCHASES TABLE
-CREATE TABLE IF NOT EXISTS stripe_purchases (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
-  stripe_session_id TEXT UNIQUE,
-  stripe_payment_intent TEXT,
-  pack_id TEXT NOT NULL,
-  amount_cents INT,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'refunded')),
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE stripe_purchases ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own purchases" ON stripe_purchases
-  FOR SELECT USING (auth.uid() = user_id);
-
--- 9. FRIENDSHIPS TABLE
+-- 8. FRIENDSHIPS TABLE
 CREATE TABLE IF NOT EXISTS friendships (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   requester_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -184,7 +170,7 @@ CREATE POLICY "Users can update own friendships" ON friendships
 CREATE POLICY "Users can delete own friendships" ON friendships
   FOR DELETE USING (auth.uid() = requester_id OR auth.uid() = addressee_id);
 
--- 10. USER ACHIEVEMENTS TABLE
+-- 9. USER ACHIEVEMENTS TABLE
 CREATE TABLE IF NOT EXISTS user_achievements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -201,7 +187,7 @@ CREATE POLICY "Achievements are viewable by all" ON user_achievements
 CREATE POLICY "Only edge functions can insert achievements" ON user_achievements
   FOR INSERT WITH CHECK (auth.role() = 'service_role');
 
--- 11. LEADERBOARD VIEW
+-- 10. LEADERBOARD VIEW
 CREATE OR REPLACE VIEW leaderboard AS
 SELECT
   id, username, display_name, avatar_url, character_class,
@@ -211,16 +197,31 @@ WHERE is_public = true
 ORDER BY xp DESC
 LIMIT 100;
 
--- 12. SEED ITEMS CATALOGUE
-INSERT INTO items_catalogue (id, name, description, slot, rarity, gold_cost, stripe_pack_id, sprite_key) VALUES
+-- 11. SEED ITEMS CATALOGUE
+INSERT INTO items_catalogue (id, name, description, slot, rarity, gold_cost, unlock_level, sprite_key) VALUES
   ('hp_potion', 'HP Potion', 'Restore 20 HP', 'consumable', 'common', 50, NULL, NULL),
   ('xp_boost', 'XP Boost', '1.5x XP for 1 hour', 'consumable', 'uncommon', 200, NULL, NULL),
   ('name_change_token', 'Name Change Token', 'Change your display name once', 'consumable', 'rare', 500, NULL, NULL),
   ('head_iron', 'Iron Helm', 'A sturdy iron helmet', 'head', 'common', 100, NULL, 'head_iron'),
   ('body_iron', 'Iron Chestplate', 'A strong iron chestplate', 'body', 'common', 150, NULL, 'body_iron'),
   ('weapon_iron', 'Iron Sword', 'A reliable iron sword', 'weapon', 'common', 120, NULL, 'weapon_iron'),
-  ('accessory_iron', 'Iron Ring', 'A simple iron ring', 'accessory', 'common', 80, NULL, 'accessory_iron')
+  ('accessory_iron', 'Iron Ring', 'A simple iron ring', 'accessory', 'common', 80, NULL, 'accessory_iron'),
+  -- Shadow Set — rare, level 10 gate
+  ('head_shadow', 'Shadow Helm', 'Dark, menacing helmet', 'head', 'rare', 500, 10, 'head_shadow'),
+  ('body_shadow', 'Shadow Armour', 'Shadow-infused chestplate', 'body', 'rare', 500, 10, 'body_shadow'),
+  ('weapon_shadow', 'Shadow Blade', 'A blade that drinks the light', 'weapon', 'rare', 500, 10, 'weapon_shadow'),
+  ('accessory_shadow', 'Shadow Amulet', 'Pulsing with dark energy', 'accessory', 'rare', 500, 10, 'accessory_shadow'),
+  -- Celestial Set — epic, level 20 gate
+  ('head_celestial', 'Celestial Crown', 'Glowing halo-touched crown', 'head', 'epic', 1000, 20, 'head_celestial'),
+  ('body_celestial', 'Celestial Robes', 'Divinely woven celestial robes', 'body', 'epic', 1000, 20, 'body_celestial'),
+  ('weapon_celestial', 'Celestial Staff', 'Staff imbued with holy light', 'weapon', 'epic', 1000, 20, 'weapon_celestial'),
+  ('accessory_celestial', 'Celestial Sigil', 'Symbol of the ancients', 'accessory', 'epic', 1000, 20, 'accessory_celestial'),
+  -- Dragon Set — legendary, level 30 gate
+  ('head_dragon', 'Dragon Helm', 'Helm forged from dragon scales', 'head', 'legendary', 2000, 30, 'head_dragon'),
+  ('body_dragon', 'Dragon Plate', 'Plate armour of the Dragon Knights', 'body', 'legendary', 2000, 30, 'body_dragon'),
+  ('weapon_dragon', 'Dragon Fang', 'Weapon carved from a dragon fang', 'weapon', 'legendary', 2000, 30, 'weapon_dragon'),
+  ('accessory_dragon', 'Dragon Heart', 'Crystallised dragon heart', 'accessory', 'legendary', 2000, 30, 'accessory_dragon')
 ON CONFLICT (id) DO NOTHING;
 
--- 13. Enable Realtime for profiles (for leaderboard)
+-- 12. Enable Realtime for profiles (for leaderboard)
 ALTER PUBLICATION supabase_realtime ADD TABLE profiles;

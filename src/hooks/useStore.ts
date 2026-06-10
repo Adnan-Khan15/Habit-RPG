@@ -7,6 +7,7 @@ import { ITEMS_CATALOGUE } from '../lib/xpFormulas';
 export function useStore() {
   const user = useAuthStore((s) => s.profile);
   const queryClient = useQueryClient();
+  const userLevel = user?.level ?? 1;
 
   const inventoryQuery = useQuery({
     queryKey: ['inventory', user?.id],
@@ -26,16 +27,20 @@ export function useStore() {
       if (!user) throw new Error('Not authenticated');
       const item = ITEMS_CATALOGUE.find((i) => i.id === itemId);
       if (!item || !item.gold_cost) throw new Error('Item not available');
+      if (item.unlock_level && user.level < item.unlock_level) {
+        throw new Error(`Requires level ${item.unlock_level}`);
+      }
       if (user.gold < item.gold_cost) throw new Error('Not enough gold');
 
-      const { error } = await supabase.from('inventory').insert([
+      const { error } = await supabase.from('inventory').upsert(
         {
           user_id: user.id,
           item_id: itemId,
           quantity: 1,
           acquired_via: 'gold_shop',
         },
-      ]);
+        { onConflict: 'user_id, item_id', ignoreDuplicates: true }
+      );
       if (error) throw error;
 
       await supabase
@@ -56,6 +61,7 @@ export function useStore() {
   const catalogue = ITEMS_CATALOGUE.map((item) => ({
     ...item,
     owned: ownedItemIds.has(item.id),
+    locked: item.unlock_level ? userLevel < item.unlock_level : false,
   }));
 
   return {

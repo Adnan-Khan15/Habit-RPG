@@ -1,10 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
+import { useCharacterStore } from '../store/characterStore';
+import { MILESTONE_REWARDS, LEVEL_MILESTONES } from '../types';
 import type { Profile, EquippedGear } from '../types';
 
 export function useCharacter() {
   const user = useAuthStore((s) => s.profile);
+  const setProfile = useCharacterStore((s) => s.setProfile);
 
   const profileQuery = useQuery({
     queryKey: ['profile', user?.id],
@@ -15,7 +18,21 @@ export function useCharacter() {
         .select('*')
         .eq('id', user.id)
         .single();
-      return data as Profile | null;
+      const profile = data as Profile | null;
+
+      if (profile) {
+        // Claim any unrewarded milestones on load (safety net)
+        await claimMilestoneRewards(profile);
+        // Refresh after claiming
+        const { data: refreshed } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        if (refreshed) setProfile(refreshed as Profile);
+      }
+
+      return profile;
     },
     enabled: !!user,
   });
@@ -39,4 +56,42 @@ export function useCharacter() {
     equippedGear: gearQuery.data,
     isLoading: profileQuery.isLoading,
   };
+}
+
+export async function claimMilestoneRewards(profile: Profile) {
+  const rewarded = profile.rewarded_milestones ?? [];
+  const newlyClaimed: number[] = [];
+
+  for (const milestone of LEVEL_MILESTONES) {
+    if (profile.level >= milestone && !rewarded.includes(milestone)) {
+      newlyClaimed.push(milestone);
+    }
+  }
+
+  if (newlyClaimed.length === 0) return [];
+
+  const allItemIds: string[] = [];
+  for (const ms of newlyClaimed) {
+    const items = MILESTONE_REWARDS[ms as keyof typeof MILESTONE_REWARDS] ?? [];
+    allItemIds.push(...items);
+  }
+
+  for (const itemId of allItemIds) {
+    await supabase.from('inventory').upsert(
+      {
+        user_id: profile.id,
+        item_id: itemId,
+        quantity: 1,
+        acquired_via: 'reward',
+      },
+      { onConflict: 'user_id, item_id', ignoreDuplicates: true }
+    );
+  }
+
+  await supabase
+    .from('profiles')
+    .update({ rewarded_milestones: [...rewarded, ...newlyClaimed] })
+    .eq('id', profile.id);
+
+  return newlyClaimed;
 }

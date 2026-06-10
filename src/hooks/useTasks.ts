@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
-import type { Task, TaskCompletion } from '../types';
+import type { Task, TaskCompletion, Profile } from '../types';
 import { useTaskStore } from '../store/taskStore';
+import { claimMilestoneRewards } from './useCharacter';
 
 export function useTasks(type?: Task['type']) {
   const user = useAuthStore((s) => s.profile);
@@ -98,7 +99,8 @@ export function useTasks(type?: Task['type']) {
       streakCount: number;
     }) => {
       if (!user) throw new Error('Not authenticated');
-      const { error } = await supabase.from('task_completions').insert([
+
+      const { error: completionError } = await supabase.from('task_completions').insert([
         {
           user_id: user.id,
           task_id: taskId,
@@ -107,20 +109,43 @@ export function useTasks(type?: Task['type']) {
           streak_count: streakCount,
         } as Omit<TaskCompletion, 'id' | 'completed_at'>,
       ]);
-      if (error) throw error;
+      if (completionError) throw completionError;
 
-      await supabase
+      const { data: currentProfile } = await supabase
         .from('profiles')
-        .update({
-          xp: user.xp + xpEarned,
-          gold: user.gold + goldEarned,
-          total_tasks_completed: user.total_tasks_completed + 1,
-        })
-        .eq('id', user.id);
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (currentProfile) {
+        await supabase
+          .from('profiles')
+          .update({
+            xp: (currentProfile as Profile).xp + xpEarned,
+            gold: (currentProfile as Profile).gold + goldEarned,
+            total_tasks_completed: (currentProfile as Profile).total_tasks_completed + 1,
+          })
+          .eq('id', user.id);
+      }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+
+      // Check for newly unlocked milestone rewards
+      const { data: freshProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+
+      if (freshProfile) {
+        const claimed = await claimMilestoneRewards(freshProfile as Profile);
+        if (claimed.length > 0) {
+          queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+          queryClient.invalidateQueries({ queryKey: ['inventory', user?.id] });
+        }
+      }
     },
   });
 

@@ -1,14 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { useCharacterStore } from '../store/characterStore';
 import { MILESTONE_REWARDS, LEVEL_MILESTONES } from '../types';
-import type { Profile, EquippedGear } from '../types';
+import type { Profile, EquippedGear, GearSlot } from '../types';
+import { ITEMS_CATALOGUE } from '../lib/xpFormulas';
 
 export function useCharacter() {
   const user = useAuthStore((s) => s.profile);
   const setProfile = useCharacterStore((s) => s.setProfile);
   const setEquippedGear = useCharacterStore((s) => s.setEquippedGear);
+  const queryClient = useQueryClient();
 
   const profileQuery = useQuery({
     queryKey: ['profile', user?.id],
@@ -22,9 +24,7 @@ export function useCharacter() {
       const profile = data as Profile | null;
 
       if (profile) {
-        // Claim any unrewarded milestones on load (safety net)
         await claimMilestoneRewards(profile);
-        // Refresh after claiming
         const { data: refreshed } = await supabase
           .from('profiles')
           .select('*')
@@ -54,10 +54,57 @@ export function useCharacter() {
     enabled: !!user,
   });
 
+  const equipItem = useMutation({
+    mutationFn: async (itemId: string) => {
+      if (!user) throw new Error('Not authenticated');
+      const item = ITEMS_CATALOGUE.find(i => i.id === itemId);
+      if (!item || item.slot === 'consumable') throw new Error('Cannot equip this item');
+
+      const slot = item.slot as GearSlot;
+      const column = `${slot}_item_id` as const;
+
+      const existing = await supabase
+        .from('equipped_gear')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing.data) {
+        await supabase
+          .from('equipped_gear')
+          .update({ [column]: itemId })
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('equipped_gear')
+          .insert({ user_id: user.id, [column]: itemId });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equippedGear', user?.id] });
+    },
+  });
+
+  const unequipItem = useMutation({
+    mutationFn: async (slot: GearSlot) => {
+      if (!user) throw new Error('Not authenticated');
+      const column = `${slot}_item_id` as const;
+      await supabase
+        .from('equipped_gear')
+        .update({ [column]: null })
+        .eq('user_id', user.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equippedGear', user?.id] });
+    },
+  });
+
   return {
     profile: profileQuery.data,
     equippedGear: gearQuery.data,
     isLoading: profileQuery.isLoading,
+    equipItem,
+    unequipItem,
   };
 }
 

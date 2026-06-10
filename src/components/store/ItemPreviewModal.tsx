@@ -2,7 +2,7 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import type { ItemCatalogue } from '../../types';
 import { PhaserCanvas } from '../character/PhaserCanvas';
-import { useAuthStore } from '../../store/authStore';
+import { useCharacterStore } from '../../store/characterStore';
 
 interface ItemPreviewModalProps {
   item: ItemCatalogue | null;
@@ -11,7 +11,7 @@ interface ItemPreviewModalProps {
 }
 
 export function ItemPreviewModal({ item, onClose, onBuy }: ItemPreviewModalProps) {
-  const profile = useAuthStore((s) => s.profile);
+  const profile = useCharacterStore((s) => s.profile);
 
   if (!item) return null;
 

@@ -18,10 +18,11 @@ export function getStreakBonus(streakCount: number): number {
 
 export function calculateRewards(
   difficulty: Difficulty,
-  streakCount: number = 0
+  streakCount: number = 0,
+  hasXpBoost: boolean = false
 ) {
   const base = DIFFICULTY_REWARDS[difficulty];
-  const multiplier = getStreakBonus(streakCount);
+  const multiplier = getStreakBonus(streakCount) * (hasXpBoost ? 1.5 : 1);
   return {
     xp: Math.round(base.xp * multiplier),
     gold: base.gold,

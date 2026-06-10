@@ -8,6 +8,7 @@ interface CharacterState {
   isLevelingUp: boolean;
   isFaint: boolean;
   debuffUntil: string | null;
+  xpBoostUntil: string | null;
   setProfile: (profile: Profile | null) => void;
   setEquippedGear: (gear: EquippedGear | null) => void;
   setLevelingUp: (value: boolean) => void;
@@ -16,6 +17,7 @@ interface CharacterState {
   takeDamage: (damage: number) => void;
   healHp: (amount: number) => void;
   setFaintState: (faint: boolean) => void;
+  setXpBoostUntil: (until: string | null) => void;
 }
 
 export const useCharacterStore = create<CharacterState>((set, get) => ({
@@ -24,6 +26,7 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   isLevelingUp: false,
   isFaint: false,
   debuffUntil: null,
+  xpBoostUntil: null,
   setProfile: (profile) =>
     set({
       profile,
@@ -71,4 +74,5 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
     });
   },
   setFaintState: (isFaint) => set({ isFaint }),
+  setXpBoostUntil: (xpBoostUntil) => set({ xpBoostUntil }),
 }));

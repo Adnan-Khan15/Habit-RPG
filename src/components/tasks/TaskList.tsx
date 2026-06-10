@@ -30,7 +30,9 @@ export function TaskList() {
     async (task: Task) => {
       if (!profile) return;
 
-      const rewards = calculateRewards(task.difficulty, 0);
+      const st = useCharacterStore.getState();
+      const hasBoost = st.xpBoostUntil ? Date.now() < new Date(st.xpBoostUntil).getTime() : false;
+      const rewards = calculateRewards(task.difficulty, 0, hasBoost);
 
       addXp(rewards.xp);
       addGold(rewards.gold);

@@ -7,6 +7,7 @@ export function LevelUpOverlay() {
   const isLevelingUp = useCharacterStore((s) => s.isLevelingUp);
   const setLevelingUp = useCharacterStore((s) => s.setLevelingUp);
   const profile = useCharacterStore((s) => s.profile);
+  const equippedGear = useCharacterStore((s) => s.equippedGear);
 
   useEffect(() => {
     if (isLevelingUp) {
@@ -47,6 +48,7 @@ export function LevelUpOverlay() {
             <div className="flex justify-center">
               <PhaserCanvas
                 characterClass={profile?.character_class ?? 'warrior'}
+                equippedGear={equippedGear}
                 className="border-2 border-accent-gold"
               />
             </div>

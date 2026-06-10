@@ -9,6 +9,8 @@ import { checkAchievements } from '../lib/achievementChecker';
 export function useStore() {
   const user = useAuthStore((s) => s.profile);
   const charProfile = useCharacterStore((s) => s.profile);
+  const healHp = useCharacterStore((s) => s.healHp);
+  const setXpBoostUntil = useCharacterStore((s) => s.setXpBoostUntil);
   const queryClient = useQueryClient();
   const userLevel = charProfile?.level ?? user?.level ?? 1;
 
@@ -35,7 +37,6 @@ export function useStore() {
       }
       if (charProfile.gold < item.gold_cost) throw new Error('Not enough gold');
 
-      // Check if already owned before charging
       const { data: existing } = await supabase
         .from('inventory')
         .select('id')
@@ -61,7 +62,6 @@ export function useStore() {
       queryClient.invalidateQueries({ queryKey: ['inventory', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
 
-      // Check achievements
       if (user && charProfile) {
         const [achievementsRes, inventoryRes] = await Promise.all([
           supabase.from('user_achievements').select('*').eq('user_id', user.id),
@@ -82,6 +82,39 @@ export function useStore() {
     },
   });
 
+  const useConsumable = useMutation({
+    mutationFn: async (itemId: string) => {
+      if (!user || !charProfile) throw new Error('Not authenticated');
+
+      const invItem = (inventoryQuery.data ?? []).find((i) => i.item_id === itemId);
+      if (!invItem) throw new Error('Item not in inventory');
+
+      const { error } = await supabase
+        .from('inventory')
+        .delete()
+        .eq('id', invItem.id);
+      if (error) throw error;
+
+      if (itemId === 'hp_potion') {
+        const newHp = Math.min(charProfile.max_hp, charProfile.hp + 20);
+        await supabase
+          .from('profiles')
+          .update({ hp: newHp })
+          .eq('id', user.id);
+        healHp(20);
+      } else if (itemId === 'xp_boost') {
+        const until = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+        setXpBoostUntil(until);
+      } else if (itemId === 'name_change_token') {
+        // handled in UI with prompt before calling mutation
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+    },
+  });
+
   const ownedItemIds = new Set(
     (inventoryQuery.data ?? []).map((i) => i.item_id)
   );
@@ -97,5 +130,6 @@ export function useStore() {
     inventory: inventoryQuery.data ?? [],
     isLoading: inventoryQuery.isLoading,
     purchaseItem,
+    useConsumable,
   };
 }

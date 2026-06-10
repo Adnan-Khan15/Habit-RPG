@@ -5,6 +5,7 @@ import { GearSlots } from '../components/character/GearSlots';
 
 export default function CharacterPage() {
   const profile = useCharacterStore((s) => s.profile);
+  const equippedGear = useCharacterStore((s) => s.equippedGear);
   const isFaint = useCharacterStore((s) => s.isFaint);
 
   if (!profile) {
@@ -20,6 +21,7 @@ export default function CharacterPage() {
           <PhaserCanvas
             characterClass={profile.character_class}
             isFaint={isFaint}
+            equippedGear={equippedGear}
             className="border border-border"
           />
         </div>

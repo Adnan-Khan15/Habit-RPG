@@ -32,21 +32,29 @@ export default function ProfilePage() {
   const handleAvatarUpload = async () => {
     if (!profile || !avatarFile) return;
     setUploading(true);
-    const ext = avatarFile.name.split('.').pop();
-    const path = `${profile.id}/avatar.${ext}`;
+    try {
+      const ext = avatarFile.name.split('.').pop();
+      const path = `${profile.id}/avatar.${ext}`;
 
-    await supabase.storage.from('avatars').upload(path, avatarFile, { upsert: true });
-    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, avatarFile, { upsert: true });
+      if (uploadError) throw uploadError;
 
-    const publicUrl = urlData.publicUrl;
-    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id);
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
 
-    const updated = { ...profile, avatar_url: publicUrl };
-    useCharacterStore.getState().setProfile(updated);
-    useAuthStore.getState().setProfile(updated);
+      const publicUrl = urlData.publicUrl;
+      const { error: dbError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id);
+      if (dbError) throw dbError;
 
-    setUploading(false);
-    setAvatarFile(null);
+      const updated = { ...profile, avatar_url: publicUrl };
+      useCharacterStore.getState().setProfile(updated);
+      useAuthStore.getState().setProfile(updated);
+
+      setAvatarFile(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to upload avatar');
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (!profile) return null;

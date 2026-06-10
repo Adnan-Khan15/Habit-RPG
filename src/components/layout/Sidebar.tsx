@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useCharacterStore } from '../../store/characterStore';
 import { useAuthStore } from '../../store/authStore';
+import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 
 const navItems = [
@@ -20,11 +21,19 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-bg-card border-r border-border h-screen sticky top-0">
       <div className="p-4 border-b border-border">
-        <h1 className="text-xl font-display text-accent-gold">Habit RPG</h1>
         {profile && (
-          <p className="text-xs text-text-muted mt-1">
-            Lv.{profile.level} {profile.display_name ?? profile.username}
-          </p>
+          <div className="flex items-center gap-3">
+            <Avatar src={profile.avatar_url} name={profile.display_name || profile.username} size="sm" />
+            <div>
+              <h1 className="text-xl font-display text-accent-gold">Habit RPG</h1>
+              <p className="text-xs text-text-muted">
+                Lv.{profile.level} {profile.display_name ?? profile.username}
+              </p>
+            </div>
+          </div>
+        )}
+        {!profile && (
+          <h1 className="text-xl font-display text-accent-gold">Habit RPG</h1>
         )}
       </div>
 

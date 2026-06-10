@@ -38,7 +38,13 @@ export default function ProfilePage() {
     await supabase.storage.from('avatars').upload(path, avatarFile, { upsert: true });
     const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
 
-    await supabase.from('profiles').update({ avatar_url: urlData.publicUrl }).eq('id', profile.id);
+    const publicUrl = urlData.publicUrl;
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id);
+
+    const updated = { ...profile, avatar_url: publicUrl };
+    useCharacterStore.getState().setProfile(updated);
+    useAuthStore.getState().setProfile(updated);
+
     setUploading(false);
     setAvatarFile(null);
   };

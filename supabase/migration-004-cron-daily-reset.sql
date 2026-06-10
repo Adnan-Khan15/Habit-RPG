@@ -17,3 +17,16 @@ SELECT cron.schedule(
     )
   ) AS request_id$$
 );
+
+-- Delete user RPC: used by SettingsPage "Delete Account"
+CREATE OR REPLACE FUNCTION delete_user()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  DELETE FROM profiles WHERE id = auth.uid();
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$;

@@ -1,7 +1,7 @@
-import { useAuthStore } from '../../store/authStore';
+import { useCharacterStore } from '../../store/characterStore';
 
 export function TopBar() {
-  const profile = useAuthStore((s) => s.profile);
+  const profile = useCharacterStore((s) => s.profile);
 
   return (
     <header className="sticky top-0 z-30 bg-bg-primary/80 backdrop-blur-md border-b border-border px-4 py-2 flex items-center justify-between">

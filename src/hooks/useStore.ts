@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
+import { useCharacterStore } from '../store/characterStore';
 import type { InventoryItem } from '../types';
 import { ITEMS_CATALOGUE } from '../lib/xpFormulas';
+import { checkAchievements } from '../lib/achievementChecker';
 
 export function useStore() {
   const user = useAuthStore((s) => s.profile);
+  const charProfile = useCharacterStore((s) => s.profile);
   const queryClient = useQueryClient();
-  const userLevel = user?.level ?? 1;
+  const userLevel = charProfile?.level ?? user?.level ?? 1;
 
   const inventoryQuery = useQuery({
     queryKey: ['inventory', user?.id],
@@ -24,13 +27,13 @@ export function useStore() {
 
   const purchaseItem = useMutation({
     mutationFn: async (itemId: string) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user || !charProfile) throw new Error('Not authenticated');
       const item = ITEMS_CATALOGUE.find((i) => i.id === itemId);
       if (!item || !item.gold_cost) throw new Error('Item not available');
-      if (item.unlock_level && user.level < item.unlock_level) {
+      if (item.unlock_level && charProfile.level < item.unlock_level) {
         throw new Error(`Requires level ${item.unlock_level}`);
       }
-      if (user.gold < item.gold_cost) throw new Error('Not enough gold');
+      if (charProfile.gold < item.gold_cost) throw new Error('Not enough gold');
 
       // Check if already owned before charging
       const { data: existing } = await supabase
@@ -51,12 +54,31 @@ export function useStore() {
 
       await supabase
         .from('profiles')
-        .update({ gold: user.gold - item.gold_cost })
+        .update({ gold: charProfile.gold - item.gold_cost })
         .eq('id', user.id);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['inventory', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+
+      // Check achievements
+      if (user && charProfile) {
+        const [achievementsRes, inventoryRes] = await Promise.all([
+          supabase.from('user_achievements').select('*').eq('user_id', user.id),
+          supabase.from('inventory').select('id').eq('user_id', user.id),
+        ]);
+        const result = checkAchievements(
+          charProfile,
+          (achievementsRes.data ?? []) as any,
+          { ownedItemCount: (inventoryRes.data ?? []).length }
+        );
+        if (result.newlyUnlocked.length > 0) {
+          await supabase.from('user_achievements').insert(
+            result.newlyUnlocked.map((key) => ({ user_id: user.id, achievement_key: key }))
+          );
+          queryClient.invalidateQueries({ queryKey: ['achievements', user?.id] });
+        }
+      }
     },
   });
 

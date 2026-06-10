@@ -1,4 +1,5 @@
 import { useCharacterStore } from '../../store/characterStore';
+import { ITEMS_CATALOGUE } from '../../lib/xpFormulas';
 import type { GearSlot } from '../../types';
 
 const slotLabels: Record<GearSlot, string> = {
@@ -24,6 +25,7 @@ export function GearSlots() {
     <div className="grid grid-cols-2 gap-2">
       {slots.map((slot) => {
         const itemId = equippedGear?.[`${slot}_item_id` as keyof typeof equippedGear] as string | null;
+        const item = itemId ? ITEMS_CATALOGUE.find((i) => i.id === itemId) : null;
         return (
           <div
             key={slot}
@@ -33,7 +35,7 @@ export function GearSlots() {
             <div>
               <p className="text-xs text-text-muted uppercase">{slotLabels[slot]}</p>
               <p className="text-sm font-medium text-text-primary">
-                {itemId ? itemId.replace(`${slot}_`, '').replace('_', ' ') : 'Empty'}
+                {item ? item.name : 'Empty'}
               </p>
             </div>
           </div>

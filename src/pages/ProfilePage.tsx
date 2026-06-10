@@ -89,7 +89,7 @@ export default function ProfilePage() {
         </div>
         <div>
           <p className="text-xl font-bold text-accent-purple mono">{profile.xp.toLocaleString()}</p>
-          <p className="text-xs text-text-muted">Total XP</p>
+          <p className="text-xs text-text-muted">XP Progress</p>
         </div>
       </div>
 

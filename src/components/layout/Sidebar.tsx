@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useCharacterStore } from '../../store/characterStore';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from '../ui/Button';
 
@@ -7,11 +8,12 @@ const navItems = [
   { to: '/dashboard/character', label: 'Character', icon: '👤' },
   { to: '/dashboard/store', label: 'Store', icon: '🏪' },
   { to: '/dashboard/social', label: 'Social', icon: '👥' },
-  { to: '/dashboard/profile', label: 'Profile', icon: '⚙️' },
+  { to: '/dashboard/profile', label: 'Profile', icon: '👤' },
+  { to: '/dashboard/settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export function Sidebar() {
-  const profile = useAuthStore((s) => s.profile);
+  const profile = useCharacterStore((s) => s.profile);
   const signOut = useAuthStore((s) => s.signOut);
 
   return (
@@ -20,7 +22,7 @@ export function Sidebar() {
         <h1 className="text-xl font-display text-accent-gold">Habit RPG</h1>
         {profile && (
           <p className="text-xs text-text-muted mt-1">
-            Lv.{profile.level} {profile.display_name}
+            Lv.{profile.level} {profile.display_name ?? profile.username}
           </p>
         )}
       </div>

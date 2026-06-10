@@ -5,6 +5,7 @@ import type { Task, TaskCompletion, Profile } from '../types';
 import { useTaskStore } from '../store/taskStore';
 import { claimMilestoneRewards } from './useCharacter';
 import { addXpToLevel, calculateMaxHp } from '../lib/xpFormulas';
+import { checkAchievements } from '../lib/achievementChecker';
 
 export function useTasks(type?: Task['type']) {
   const user = useAuthStore((s) => s.profile);
@@ -149,6 +150,23 @@ export function useTasks(type?: Task['type']) {
         if (claimed.length > 0) {
           queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
           queryClient.invalidateQueries({ queryKey: ['inventory', user?.id] });
+        }
+
+        // Check achievements
+        const [achievementsRes, inventoryRes] = await Promise.all([
+          supabase.from('user_achievements').select('*').eq('user_id', user!.id),
+          supabase.from('inventory').select('id').eq('user_id', user!.id),
+        ]);
+        const result = checkAchievements(
+          freshProfile as Profile,
+          (achievementsRes.data ?? []) as any,
+          { ownedItemCount: (inventoryRes.data ?? []).length }
+        );
+        if (result.newlyUnlocked.length > 0) {
+          await supabase.from('user_achievements').insert(
+            result.newlyUnlocked.map((key) => ({ user_id: user!.id, achievement_key: key }))
+          );
+          queryClient.invalidateQueries({ queryKey: ['achievements', user?.id] });
         }
       }
     },

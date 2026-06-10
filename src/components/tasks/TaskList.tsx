@@ -23,6 +23,7 @@ export function TaskList() {
   const profile = useAuthStore((s) => s.profile);
   const addXp = useCharacterStore((s) => s.addXp);
   const addGold = useCharacterStore((s) => s.addGold);
+  const takeDamage = useCharacterStore((s) => s.takeDamage);
   const addToast = useNotificationStore((s) => s.addToast);
 
   const handleComplete = useCallback(
@@ -64,6 +65,7 @@ export function TaskList() {
 
   const handleToggleNegative = async (task: Task) => {
     if (!profile) return;
+    takeDamage(5);
     addToast({ type: 'info', title: `-5 HP from "${task.title}"` });
   };
 

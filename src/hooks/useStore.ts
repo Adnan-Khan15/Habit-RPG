@@ -32,15 +32,21 @@ export function useStore() {
       }
       if (user.gold < item.gold_cost) throw new Error('Not enough gold');
 
-      const { error } = await supabase.from('inventory').upsert(
-        {
-          user_id: user.id,
-          item_id: itemId,
-          quantity: 1,
-          acquired_via: 'gold_shop',
-        },
-        { onConflict: 'user_id, item_id', ignoreDuplicates: true }
-      );
+      // Check if already owned before charging
+      const { data: existing } = await supabase
+        .from('inventory')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('item_id', itemId)
+        .maybeSingle();
+      if (existing) throw new Error('Already owned');
+
+      const { error } = await supabase.from('inventory').insert({
+        user_id: user.id,
+        item_id: itemId,
+        quantity: 1,
+        acquired_via: 'gold_shop',
+      });
       if (error) throw error;
 
       await supabase

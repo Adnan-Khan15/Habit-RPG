@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Profile, EquippedGear } from '../types';
-import { calculateMaxHp } from '../lib/xpFormulas';
+import { addXpToLevel, calculateMaxHp } from '../lib/xpFormulas';
 
 interface CharacterState {
   profile: Profile | null;
@@ -34,19 +34,17 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   addXp: (xp) => {
     const profile = get().profile;
     if (!profile) return { leveledUp: false, newLevel: 1 };
-    const newXp = profile.xp + xp;
-    const newLevel = Math.min(profile.level + 1, 50);
-    const leveledUp = newLevel > profile.level;
+    const result = addXpToLevel(profile.level, profile.xp, xp);
     set({
       profile: {
         ...profile,
-        xp: leveledUp ? newXp - profile.xp : newXp,
-        level: leveledUp ? newLevel : profile.level,
-        max_hp: calculateMaxHp(leveledUp ? newLevel : profile.level),
+        xp: result.xp,
+        level: result.level,
+        max_hp: calculateMaxHp(result.level),
       },
-      isLevelingUp: leveledUp,
+      isLevelingUp: result.leveledUp,
     });
-    return { leveledUp, newLevel };
+    return { leveledUp: result.leveledUp, newLevel: result.level };
   },
   addGold: (gold) => {
     const profile = get().profile;

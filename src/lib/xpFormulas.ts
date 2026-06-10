@@ -46,6 +46,26 @@ export function calculateLevelProgress(xp: number, level: number): number {
   return xp / xpForNext;
 }
 
+export function addXpToLevel(
+  currentLevel: number,
+  currentXp: number,
+  earnedXp: number
+): { level: number; xp: number; leveledUp: boolean } {
+  let progress = currentXp + earnedXp;
+  let level = currentLevel;
+
+  while (level < 50 && progress >= xpRequiredForLevel(level)) {
+    progress -= xpRequiredForLevel(level);
+    level++;
+  }
+
+  return {
+    level,
+    xp: progress,
+    leveledUp: level > currentLevel,
+  };
+}
+
 export function calculateMaxHp(level: number): number {
   return 50 + level * 5;
 }

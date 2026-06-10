@@ -1,5 +1,6 @@
 import { ProgressBar } from '../ui/ProgressBar';
 import { useCharacterStore } from '../../store/characterStore';
+import { xpRequiredForLevel } from '../../lib/xpFormulas';
 
 export function XPBar() {
   const profile = useCharacterStore((s) => s.profile);
@@ -7,7 +8,7 @@ export function XPBar() {
   return (
     <ProgressBar
       value={profile.xp}
-      max={100} // Will be replaced with actual xpForNext
+      max={xpRequiredForLevel(profile.level)}
       variant="xp"
       showLabel={true}
     />

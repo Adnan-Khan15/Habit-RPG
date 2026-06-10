@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import type { Task, TaskCompletion, Profile } from '../types';
 import { useTaskStore } from '../store/taskStore';
 import { claimMilestoneRewards } from './useCharacter';
+import { addXpToLevel, calculateMaxHp } from '../lib/xpFormulas';
 
 export function useTasks(type?: Task['type']) {
   const user = useAuthStore((s) => s.profile);
@@ -118,12 +119,16 @@ export function useTasks(type?: Task['type']) {
         .single();
 
       if (currentProfile) {
+        const p = currentProfile as Profile;
+        const { level, xp } = addXpToLevel(p.level, p.xp, xpEarned);
         await supabase
           .from('profiles')
           .update({
-            xp: (currentProfile as Profile).xp + xpEarned,
-            gold: (currentProfile as Profile).gold + goldEarned,
-            total_tasks_completed: (currentProfile as Profile).total_tasks_completed + 1,
+            xp,
+            level,
+            gold: p.gold + goldEarned,
+            max_hp: calculateMaxHp(level),
+            total_tasks_completed: p.total_tasks_completed + 1,
           })
           .eq('id', user.id);
       }

@@ -15,6 +15,8 @@ const ACHIEVEMENT_CONDITIONS: Record<string, (profile: any, context: any) => boo
   max_level: (profile, _) => profile.level >= 50,
   social_butterfly: (_, ctx) => ctx.friendsCount >= 5,
   top_10: (_, ctx) => ctx.leaderboardRank !== undefined && ctx.leaderboardRank <= 10,
+  shopaholic: (_, ctx) => (ctx.ownedItemCount ?? 0) >= 5,
+  collector: (_, ctx) => (ctx.ownedItemCount ?? 0) >= 10,
 };
 
 serve(async (req) => {
@@ -39,6 +41,11 @@ serve(async (req) => {
     .or(`requester_id.eq.${user_id},addressee_id.eq.${user_id}`)
     .eq('status', 'accepted');
 
+  const { data: inventory } = await supabase
+    .from('inventory')
+    .select('id')
+    .eq('user_id', user_id);
+
   const { data: existingAchievements } = await supabase
     .from('user_achievements')
     .select('achievement_key')
@@ -49,6 +56,7 @@ serve(async (req) => {
   const context = {
     totalTasksCompleted: completions?.length ?? 0,
     friendsCount: friends?.length ?? 0,
+    ownedItemCount: inventory?.length ?? 0,
   };
 
   const newlyUnlocked: string[] = [];

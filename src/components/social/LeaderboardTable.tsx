@@ -1,10 +1,10 @@
 import { useLeaderboard } from '../../hooks/useLeaderboard';
-import { useAuthStore } from '../../store/authStore';
+import { useCharacterStore } from '../../store/characterStore';
 import { LeaderboardRow } from './LeaderboardRow';
 
 export function LeaderboardTable() {
   const { entries, isLoading } = useLeaderboard();
-  const profile = useAuthStore((s) => s.profile);
+  const profile = useCharacterStore((s) => s.profile);
 
   if (isLoading) {
     return (

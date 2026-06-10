@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/Button';
@@ -94,6 +95,12 @@ export default function SettingsPage() {
         >
           Delete Account
         </Button>
+      </section>
+
+      <section className="card">
+        <Link to="/dashboard/about" className="block text-center text-sm text-text-muted hover:text-accent-gold transition-colors">
+          📖 About Habit RPG
+        </Link>
       </section>
     </div>
   );

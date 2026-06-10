@@ -8,6 +8,7 @@ import type { Profile, EquippedGear } from '../types';
 export function useCharacter() {
   const user = useAuthStore((s) => s.profile);
   const setProfile = useCharacterStore((s) => s.setProfile);
+  const setEquippedGear = useCharacterStore((s) => s.setEquippedGear);
 
   const profileQuery = useQuery({
     queryKey: ['profile', user?.id],
@@ -46,7 +47,9 @@ export function useCharacter() {
         .select('*')
         .eq('user_id', user.id)
         .single();
-      return data as EquippedGear | null;
+      const gear = data as EquippedGear | null;
+      if (gear) setEquippedGear(gear);
+      return gear;
     },
     enabled: !!user,
   });

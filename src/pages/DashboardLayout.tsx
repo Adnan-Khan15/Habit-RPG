@@ -1,5 +1,6 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useCharacter } from '../hooks/useCharacter';
 import { Sidebar } from '../components/layout/Sidebar';
 import { TopBar } from '../components/layout/TopBar';
 import { MobileTabBar } from '../components/layout/MobileTabBar';
@@ -10,6 +11,7 @@ import { PWAInstallBanner } from '../components/ui/PWAInstallBanner';
 export function DashboardLayout() {
   const session = useAuthStore((s) => s.session);
   const isLoading = useAuthStore((s) => s.isLoading);
+  useCharacter();
 
   if (isLoading) {
     return (

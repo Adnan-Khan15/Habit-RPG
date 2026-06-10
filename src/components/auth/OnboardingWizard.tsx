@@ -49,19 +49,17 @@ export function OnboardingWizard() {
         .eq('id', session.user.id);
       if (profileError) throw profileError;
 
-      for (const habitTitle of selectedHabits) {
-        const { error: taskError } = await supabase.from('tasks').insert([
-          {
-            user_id: session.user.id,
-            title: habitTitle,
-            type: 'habit',
-            difficulty: 'easy',
-            is_positive: true,
-            is_active: true,
-          },
-        ]);
-        if (taskError) throw taskError;
-      }
+      const { error: taskError } = await supabase.from('tasks').insert(
+        selectedHabits.map((title) => ({
+          user_id: session.user.id,
+          title,
+          type: 'habit',
+          difficulty: 'easy',
+          is_positive: true,
+          is_active: true,
+        }))
+      );
+      if (taskError) throw taskError;
 
       setSaving(false);
       navigate('/dashboard/tasks');

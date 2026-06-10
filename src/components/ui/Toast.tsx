@@ -22,7 +22,7 @@ export function ToastContainer() {
   const removeToast = useNotificationStore((s) => s.removeToast);
 
   return (
-    <div className="fixed top-4 right-4 z-[60] flex flex-col gap-2 max-w-sm">
+    <div className="fixed top-4 left-4 right-4 md:left-auto md:right-4 z-[60] flex flex-col gap-2 max-w-sm mx-auto md:mx-0">
       <AnimatePresence>
         {toasts.map((toast) => (
           <motion.div

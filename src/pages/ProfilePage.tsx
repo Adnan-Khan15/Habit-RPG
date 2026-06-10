@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
+import { useAuthStore } from '../store/authStore';
 import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -10,6 +12,7 @@ import type { UserAchievement } from '../types';
 
 export default function ProfilePage() {
   const profile = useCharacterStore((s) => s.profile);
+  const signOut = useAuthStore((s) => s.signOut);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -112,6 +115,17 @@ export default function ProfilePage() {
             );
           })}
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2 pt-4 border-t border-border">
+        <Link to="/dashboard/settings">
+          <Button variant="ghost" className="w-full border border-border">
+            ⚙️ Settings
+          </Button>
+        </Link>
+        <Button variant="danger" className="w-full" onClick={signOut}>
+          Sign Out
+        </Button>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../store/authStore';
 import { Button } from '../ui/Button';
 import type { CharacterClass } from '../../types';
 
@@ -24,40 +23,52 @@ const SUGGESTED_HABITS = [
 
 export function OnboardingWizard() {
   const navigate = useNavigate();
-  const profile = useAuthStore((s) => s.profile);
   const [step, setStep] = useState(0);
   const [characterClass, setCharacterClass] = useState<CharacterClass>('warrior');
   const [displayName, setDisplayName] = useState('');
   const [selectedHabits, setSelectedHabits] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const handleComplete = async () => {
-    if (!profile) return;
-    setSaving(true);
-
-    await supabase
-      .from('profiles')
-      .update({
-        character_class: characterClass,
-        display_name: displayName || null,
-      })
-      .eq('id', profile.id);
-
-    for (const habitTitle of selectedHabits) {
-      await supabase.from('tasks').insert([
-        {
-          user_id: profile.id,
-          title: habitTitle,
-          type: 'habit',
-          difficulty: 'easy',
-          is_positive: true,
-          is_active: true,
-        },
-      ]);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      setError('Not signed in. Please go back and sign up again.');
+      return;
     }
+    setSaving(true);
+    setError('');
 
-    setSaving(false);
-    navigate('/dashboard/tasks');
+    try {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          character_class: characterClass,
+          display_name: displayName || null,
+        })
+        .eq('id', session.user.id);
+      if (profileError) throw profileError;
+
+      for (const habitTitle of selectedHabits) {
+        const { error: taskError } = await supabase.from('tasks').insert([
+          {
+            user_id: session.user.id,
+            title: habitTitle,
+            type: 'habit',
+            difficulty: 'easy',
+            is_positive: true,
+            is_active: true,
+          },
+        ]);
+        if (taskError) throw taskError;
+      }
+
+      setSaving(false);
+      navigate('/dashboard/tasks');
+    } catch (err: any) {
+      setError(err.message);
+      setSaving(false);
+    }
   };
 
   return (
@@ -150,6 +161,9 @@ export function OnboardingWizard() {
               );
             })}
           </div>
+          {error && (
+            <p className="text-sm text-accent-red text-center mb-3">{error}</p>
+          )}
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => setStep(1)}>
               Back

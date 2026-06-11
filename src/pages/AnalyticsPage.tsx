@@ -5,7 +5,7 @@ import { useTaskHistory } from '../hooks/useTaskHistory';
 export default function AnalyticsPage() {
   const profile = useCharacterStore((s) => s.profile);
   const [range, setRange] = useState<'7d' | '30d' | '90d'>('7d');
-  const { data: dailyStats, isLoading } = useTaskHistory(range);
+  const { data: dailyStats, isLoading } = useTaskHistory(range, profile?.id);
 
   if (!profile) return null;
 

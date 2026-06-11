@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/authStore';
 
 interface DayStats {
   date: string;
@@ -9,20 +8,18 @@ interface DayStats {
   gold: number;
 }
 
-export function useTaskHistory(range: '7d' | '30d' | '90d' = '7d') {
-  const user = useAuthStore((s) => s.profile);
-
+export function useTaskHistory(range: '7d' | '30d' | '90d' = '7d', userId?: string) {
   const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
 
   return useQuery({
-    queryKey: ['taskHistory', user?.id, range],
+    queryKey: ['taskHistory', userId, range],
     queryFn: async () => {
-      if (!user) return [];
+      if (!userId) return [];
       const since = new Date(Date.now() - days * 86400000).toISOString();
       const { data } = await supabase
         .from('task_completions')
         .select('completed_at, xp_earned, gold_earned')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .gte('completed_at', since)
         .order('completed_at', { ascending: true });
 
@@ -46,7 +43,7 @@ export function useTaskHistory(range: '7d' | '30d' | '90d' = '7d') {
 
       return Array.from(dayMap.values());
     },
-    enabled: !!user,
+    enabled: !!userId,
     refetchInterval: 30_000,
   });
 }

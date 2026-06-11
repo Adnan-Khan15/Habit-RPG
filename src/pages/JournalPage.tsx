@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useJournal, type JournalEntry } from '../hooks/useJournal';
 import { Button } from '../components/ui/Button';
 
@@ -15,7 +15,28 @@ export default function JournalPage() {
   const [selectedMood, setSelectedMood] = useState(todayEntry?.mood ?? 0);
   const [note, setNote] = useState(todayEntry?.note ?? '');
   const [saving, setSaving] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(todayEntry ?? null);
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
+  const autoSelected = useRef(false);
+
+  // sync selectedEntry and form fields with todayEntry after data loads/saves
+  useEffect(() => {
+    if (!todayEntry) return;
+    if (!selectedEntry && !autoSelected.current) {
+      setSelectedEntry(todayEntry);
+      autoSelected.current = true;
+    } else if (selectedEntry?.entry_date === todayEntry.entry_date) {
+      setSelectedEntry(todayEntry);
+    }
+  }, [todayEntry]);
+
+  // sync form fields with todayEntry once on initial load
+  useEffect(() => {
+    if (todayEntry && autoSelected.current) return;
+    if (todayEntry) {
+      setSelectedMood(todayEntry.mood);
+      setNote(todayEntry.note ?? '');
+    }
+  }, [todayEntry]);
 
   const handleSave = async () => {
     if (selectedMood === 0) return;

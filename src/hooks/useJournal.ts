@@ -26,6 +26,7 @@ export function useJournal() {
       return (data as JournalEntry[]) ?? [];
     },
     enabled: !!user,
+    refetchInterval: 30_000,
   });
 
   const saveEntry = useMutation({

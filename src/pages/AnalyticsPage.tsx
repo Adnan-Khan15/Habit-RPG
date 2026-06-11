@@ -7,8 +7,6 @@ export default function AnalyticsPage() {
   const [range, setRange] = useState<'7d' | '30d' | '90d'>('7d');
   const { data: dailyStats, isLoading } = useTaskHistory(range);
 
-  const isLongRange = range === '90d';
-
   if (!profile) return null;
 
   const maxCount = Math.max(1, ...(dailyStats ?? []).map((d) => d.count));
@@ -54,13 +52,11 @@ export default function AnalyticsPage() {
           <BarChart
             data={dailyStats ?? []}
             maxValue={maxCount}
-            isLongRange={isLongRange}
             getColor={(d) => {
               const w = new Date(d.date).getDay();
               return d.count > 0 ? (w === 0 || w === 6 ? '#f59e0b' : '#a855f7') : '#1f2937';
             }}
             formatTooltip={(d) => `${d.date}: ${d.count} tasks (${d.xp} XP)`}
-            showLabel={!isLongRange}
             getValue={(d) => d.count}
           />
         )}
@@ -74,11 +70,10 @@ export default function AnalyticsPage() {
           <BarChart
             data={dailyStats ?? []}
             maxValue={maxXp}
-            isLongRange={isLongRange}
             getColor={() => '#22c55e'}
             formatTooltip={(d) => `${d.date}: ${d.xp} XP`}
-            showLabel={false}
             getValue={(d) => d.xp}
+            labelInterval={0}
           />
         )}
       </div>
@@ -89,19 +84,17 @@ export default function AnalyticsPage() {
 function BarChart({
   data,
   maxValue,
-  isLongRange,
   getColor,
   formatTooltip,
-  showLabel,
   getValue,
+  labelInterval,
 }: {
   data: { date: string; count: number; xp: number }[];
   maxValue: number;
-  isLongRange: boolean;
   getColor: (d: { date: string; count: number; xp: number }) => string;
   formatTooltip: (d: { date: string; count: number; xp: number }) => string;
-  showLabel: boolean;
   getValue: (d: { date: string; count: number; xp: number }) => number;
+  labelInterval?: number;
 }) {
   const barWidth = useMemo(() => {
     const count = data.length;
@@ -110,13 +103,15 @@ function BarChart({
     return 'min-w-[8px]';
   }, [data.length]);
 
-  const gap = isLongRange ? 'gap-px' : 'gap-[3px]';
+  const gap = data.length > 30 ? 'gap-px' : 'gap-[3px]';
+  const interval = labelInterval ?? (data.length > 45 ? 7 : data.length > 14 ? 5 : 1);
 
   return (
     <div className="overflow-x-auto pb-1">
       <div className={`flex items-end ${gap}`} style={{ minWidth: data.length > 30 ? `${data.length * 12}px` : 'auto', height: '8rem' }}>
-        {data.map((d) => {
+        {data.map((d, i) => {
           const pct = getValue(d) / maxValue * 100;
+          const showLabel = interval > 0 && i % interval === 0;
           return (
             <div key={d.date} className={`${barWidth} flex flex-col items-center ${showLabel ? 'gap-1' : 'gap-0'} group relative`}>
               <div className="absolute bottom-full mb-1 hidden group-hover:block bg-bg-card border border-border text-xs text-text-primary px-2 py-1 rounded whitespace-nowrap z-10 shadow-lg">

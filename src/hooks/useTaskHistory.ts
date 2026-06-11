@@ -13,12 +13,12 @@ export function useTaskHistory(range: '7d' | '30d' | '90d' = '7d') {
   const user = useAuthStore((s) => s.profile);
 
   const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
-  const since = new Date(Date.now() - days * 86400000).toISOString();
 
   return useQuery({
     queryKey: ['taskHistory', user?.id, range],
     queryFn: async () => {
       if (!user) return [];
+      const since = new Date(Date.now() - days * 86400000).toISOString();
       const { data } = await supabase
         .from('task_completions')
         .select('completed_at, xp_earned, gold_earned')
@@ -47,5 +47,6 @@ export function useTaskHistory(range: '7d' | '30d' | '90d' = '7d') {
       return Array.from(dayMap.values());
     },
     enabled: !!user,
+    refetchInterval: 30_000,
   });
 }

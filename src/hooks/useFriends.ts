@@ -51,7 +51,7 @@ export function useFriends() {
         .from('profiles')
         .select('id')
         .eq('username', username)
-        .single();
+        .maybeSingle();
       if (!target) throw new Error('User not found');
       const { error } = await supabase.from('friendships').insert([
         { requester_id: user.id, addressee_id: target.id, status: 'pending' },

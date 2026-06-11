@@ -6,9 +6,9 @@ export default {
     extend: {
       colors: {
         bg: {
-          primary: '#0f0f1a',
-          card: '#1a1a2e',
-          elevated: '#16213e',
+          primary: 'var(--bg-primary, #0f0f1a)',
+          card: 'var(--bg-card, #1a1a2e)',
+          elevated: 'var(--bg-elevated, #16213e)',
         },
         accent: {
           gold: '#f5c842',
@@ -17,10 +17,10 @@ export default {
           green: '#22c55e',
         },
         text: {
-          primary: '#f1f5f9',
-          muted: '#64748b',
+          primary: 'var(--text-primary, #f1f5f9)',
+          muted: 'var(--text-muted, #64748b)',
         },
-        border: '#1e293b',
+        border: 'var(--border, #1e293b)',
       },
       fontFamily: {
         display: ['Cinzel', 'serif'],

@@ -7,8 +7,14 @@
 @layer base {
   html {
     font-family: 'Inter', sans-serif;
-    background-color: #0f0f1a;
-    color: #f1f5f9;
+    --bg-primary: #0f0f1a;
+    --bg-card: #1a1a2e;
+    --bg-elevated: #16213e;
+    --border: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-muted: #64748b;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
   }
 
   h1,

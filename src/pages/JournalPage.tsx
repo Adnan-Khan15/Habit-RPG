@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useJournal } from '../hooks/useJournal';
+import { useJournal, type JournalEntry } from '../hooks/useJournal';
 import { Button } from '../components/ui/Button';
 
 const MOODS = [
@@ -15,6 +15,7 @@ export default function JournalPage() {
   const [selectedMood, setSelectedMood] = useState(todayEntry?.mood ?? 0);
   const [note, setNote] = useState(todayEntry?.note ?? '');
   const [saving, setSaving] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
 
   const handleSave = async () => {
     if (selectedMood === 0) return;
@@ -68,25 +69,42 @@ export default function JournalPage() {
         ) : entries.length === 0 ? (
           <p className="text-sm text-text-muted">No entries yet. Start tracking your mood!</p>
         ) : (
-          <div className="grid grid-cols-7 gap-1 mb-4">
-            {Array.from({ length: 28 }, (_, i) => {
-              const d = new Date(Date.now() - i * 86400000).toISOString().split('T')[0];
-              const entry = entries.find((e) => e.entry_date === d);
-              return (
-                <div
-                  key={d}
-                  className={`aspect-square rounded flex items-center justify-center text-lg ${
-                    entry
-                      ? entry.mood >= 4 ? 'bg-accent-green/30' : entry.mood === 3 ? 'bg-accent-gold/30' : 'bg-accent-red/30'
-                      : 'bg-bg-primary'
-                  }`}
-                  title={entry ? `${d}: ${entry.note || MOODS.find(m => m.value === entry.mood)?.label}` : d}
-                >
-                  {entry ? getMoodEmoji(entry.mood) : ''}
+          <>
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {Array.from({ length: 28 }, (_, i) => {
+                const d = new Date(Date.now() - i * 86400000).toISOString().split('T')[0];
+                const entry = entries.find((e) => e.entry_date === d);
+                return (
+                  <button
+                    key={d}
+                    onClick={() => setSelectedEntry(entry ?? null)}
+                    className={`aspect-square rounded flex items-center justify-center text-lg transition-all ${
+                      entry
+                        ? entry.mood >= 4 ? 'bg-accent-green/30' : entry.mood === 3 ? 'bg-accent-gold/30' : 'bg-accent-red/30'
+                        : 'bg-bg-primary'
+                    } ${selectedEntry?.entry_date === d ? 'ring-2 ring-accent-gold' : ''} hover:ring-1 hover:ring-text-muted`}
+                    title={entry ? `${d}: ${entry.note || MOODS.find(m => m.value === entry.mood)?.label}` : d}
+                  >
+                    {entry ? getMoodEmoji(entry.mood) : ''}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedEntry && (
+              <div className="card border-accent-gold/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">{getMoodEmoji(selectedEntry.mood)}</span>
+                  <span className="text-sm text-text-muted">{selectedEntry.entry_date}</span>
+                  <span className="text-xs text-text-muted">— {MOODS.find(m => m.value === selectedEntry.mood)?.label}</span>
                 </div>
-              );
-            })}
-          </div>
+                {selectedEntry.note ? (
+                  <p className="text-sm text-text-primary whitespace-pre-wrap">{selectedEntry.note}</p>
+                ) : (
+                  <p className="text-sm text-text-muted italic">No note written</p>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -223,6 +223,7 @@ export function useTasks(type?: Task['type']) {
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['taskHistory', user?.id] });
 
       // Check for newly unlocked milestone rewards
       const { data: freshProfile } = await supabase

@@ -19,6 +19,7 @@ function applyTheme(mode: ThemeMode) {
     root.classList.remove('dark');
     root.style.setProperty('--bg-primary', '#f8f9fa');
     root.style.setProperty('--bg-card', '#ffffff');
+    root.style.setProperty('--bg-elevated', '#f1f5f9');
     root.style.setProperty('--border', '#e2e8f0');
     root.style.setProperty('--text-primary', '#1a202c');
     root.style.setProperty('--text-muted', '#718096');
@@ -27,12 +28,17 @@ function applyTheme(mode: ThemeMode) {
     if (mode === 'oled') {
       root.style.setProperty('--bg-primary', '#000000');
       root.style.setProperty('--bg-card', '#0a0a0a');
+      root.style.setProperty('--bg-elevated', '#111111');
+      root.style.setProperty('--border', '#1a1a1a');
+      root.style.setProperty('--text-primary', '#e2e8f0');
+      root.style.setProperty('--text-muted', '#64748b');
     } else {
-      root.style.removeProperty('--bg-primary');
-      root.style.removeProperty('--bg-card');
-      root.style.removeProperty('--border');
-      root.style.removeProperty('--text-primary');
-      root.style.removeProperty('--text-muted');
+      root.style.setProperty('--bg-primary', '#0f0f1a');
+      root.style.setProperty('--bg-card', '#1a1a2e');
+      root.style.setProperty('--bg-elevated', '#16213e');
+      root.style.setProperty('--border', '#1e293b');
+      root.style.setProperty('--text-primary', '#f1f5f9');
+      root.style.setProperty('--text-muted', '#64748b');
     }
   }
 }

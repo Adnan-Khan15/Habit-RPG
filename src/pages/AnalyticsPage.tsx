@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCharacterStore } from '../store/characterStore';
 import { useTaskHistory } from '../hooks/useTaskHistory';
 
@@ -6,6 +6,8 @@ export default function AnalyticsPage() {
   const profile = useCharacterStore((s) => s.profile);
   const [range, setRange] = useState<'7d' | '30d' | '90d'>('7d');
   const { data: dailyStats, isLoading } = useTaskHistory(range);
+
+  const isLongRange = range === '90d';
 
   if (!profile) return null;
 
@@ -49,29 +51,17 @@ export default function AnalyticsPage() {
         {isLoading ? (
           <div className="h-32 flex items-center justify-center text-text-muted text-sm">Loading...</div>
         ) : (
-          <div className="flex items-end gap-1 h-32">
-            {(dailyStats ?? []).map((d) => {
-              const pct = (d.count / maxCount) * 100;
-              const isWeekend = new Date(d.date).getDay() === 0 || new Date(d.date).getDay() === 6;
-              return (
-                <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative">
-                  <div className="absolute bottom-full mb-1 hidden group-hover:block bg-bg-card border border-border text-xs text-text-primary px-2 py-1 rounded whitespace-nowrap z-10">
-                    {d.date}: {d.count} tasks ({d.xp} XP)
-                  </div>
-                  <div
-                    className="w-full rounded-t transition-all hover:opacity-80"
-                    style={{
-                      height: `${Math.max(pct, 2)}%`,
-                      backgroundColor: d.count > 0 ? (isWeekend ? '#f59e0b' : '#a855f7') : '#1f2937',
-                    }}
-                  />
-                  <span className="text-[8px] text-text-muted">
-                    {new Date(d.date + 'T00:00:00').toLocaleDateString('en', { weekday: 'narrow' })}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          <BarChart
+            data={dailyStats ?? []}
+            maxValue={maxCount}
+            isLongRange={isLongRange}
+            getColor={(d) => {
+              const w = new Date(d.date).getDay();
+              return d.count > 0 ? (w === 0 || w === 6 ? '#f59e0b' : '#a855f7') : '#1f2937';
+            }}
+            formatTooltip={(d) => `${d.date}: ${d.count} tasks (${d.xp} XP)`}
+            showLabel={!isLongRange}
+          />
         )}
       </div>
 
@@ -80,26 +70,69 @@ export default function AnalyticsPage() {
         {isLoading ? (
           <div className="h-32 flex items-center justify-center text-text-muted text-sm">Loading...</div>
         ) : (
-          <div className="flex items-end gap-1 h-32">
-            {(dailyStats ?? []).map((d) => {
-              const pct = (d.xp / maxXp) * 100;
-              return (
-                <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative">
-                  <div className="absolute bottom-full mb-1 hidden group-hover:block bg-bg-card border border-border text-xs text-text-primary px-2 py-1 rounded whitespace-nowrap z-10">
-                    {d.date}: {d.xp} XP
-                  </div>
-                  <div
-                    className="w-full rounded-t transition-all hover:opacity-80"
-                    style={{
-                      height: `${Math.max(pct, 2)}%`,
-                      backgroundColor: d.xp > 0 ? '#22c55e' : '#1f2937',
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          <BarChart
+            data={dailyStats ?? []}
+            maxValue={maxXp}
+            isLongRange={isLongRange}
+            getColor={() => '#22c55e'}
+            formatTooltip={(d) => `${d.date}: ${d.xp} XP`}
+            showLabel={false}
+          />
         )}
+      </div>
+    </div>
+  );
+}
+
+function BarChart({
+  data,
+  maxValue,
+  isLongRange,
+  getColor,
+  formatTooltip,
+  showLabel,
+}: {
+  data: { date: string; count: number; xp: number }[];
+  maxValue: number;
+  isLongRange: boolean;
+  getColor: (d: { date: string; count: number; xp: number }) => string;
+  formatTooltip: (d: { date: string; count: number; xp: number }) => string;
+  showLabel: boolean;
+}) {
+  const barWidth = useMemo(() => {
+    const count = data.length;
+    if (count <= 7) return 'flex-1 min-w-[20px]';
+    if (count <= 30) return 'flex-1 min-w-[12px]';
+    return 'min-w-[8px]';
+  }, [data.length]);
+
+  const gap = isLongRange ? 'gap-px' : 'gap-[3px]';
+
+  return (
+    <div className={`overflow-x-auto pb-1 ${isLongRange ? '' : ''}`}>
+      <div className={`flex items-end ${gap}`} style={{ minWidth: data.length > 30 ? `${data.length * 12}px` : 'auto', height: '8rem' }}>
+        {data.map((d) => {
+          const pct = (d.count !== undefined ? d.count : d.xp) / maxValue * 100;
+          return (
+            <div key={d.date} className={`${barWidth} flex flex-col items-center ${showLabel ? 'gap-1' : 'gap-0'} group relative`}>
+              <div className="absolute bottom-full mb-1 hidden group-hover:block bg-bg-card border border-border text-xs text-text-primary px-2 py-1 rounded whitespace-nowrap z-10 shadow-lg">
+                {formatTooltip(d)}
+              </div>
+              <div
+                className="w-full rounded-t transition-all hover:opacity-80"
+                style={{
+                  height: `${Math.max(pct, 3)}%`,
+                  backgroundColor: getColor(d),
+                }}
+              />
+              {showLabel && (
+                <span className="text-[8px] text-text-muted">
+                  {new Date(d.date + 'T00:00:00').toLocaleDateString('en', { weekday: 'narrow' })}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ export default function JournalPage() {
   const [selectedMood, setSelectedMood] = useState(todayEntry?.mood ?? 0);
   const [note, setNote] = useState(todayEntry?.note ?? '');
   const [saving, setSaving] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(todayEntry ?? null);
 
   const handleSave = async () => {
     if (selectedMood === 0) return;

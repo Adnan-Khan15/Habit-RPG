@@ -5,14 +5,17 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    font-family: 'Inter', sans-serif;
+  :root {
     --bg-primary: #0f0f1a;
     --bg-card: #1a1a2e;
     --bg-elevated: #16213e;
     --border: #1e293b;
     --text-primary: #f1f5f9;
     --text-muted: #64748b;
+  }
+
+  html {
+    font-family: 'Inter', sans-serif;
     background-color: var(--bg-primary);
     color: var(--text-primary);
   }

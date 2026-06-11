@@ -61,6 +61,7 @@ export default function AnalyticsPage() {
             }}
             formatTooltip={(d) => `${d.date}: ${d.count} tasks (${d.xp} XP)`}
             showLabel={!isLongRange}
+            getValue={(d) => d.count}
           />
         )}
       </div>
@@ -77,6 +78,7 @@ export default function AnalyticsPage() {
             getColor={() => '#22c55e'}
             formatTooltip={(d) => `${d.date}: ${d.xp} XP`}
             showLabel={false}
+            getValue={(d) => d.xp}
           />
         )}
       </div>
@@ -91,6 +93,7 @@ function BarChart({
   getColor,
   formatTooltip,
   showLabel,
+  getValue,
 }: {
   data: { date: string; count: number; xp: number }[];
   maxValue: number;
@@ -98,6 +101,7 @@ function BarChart({
   getColor: (d: { date: string; count: number; xp: number }) => string;
   formatTooltip: (d: { date: string; count: number; xp: number }) => string;
   showLabel: boolean;
+  getValue: (d: { date: string; count: number; xp: number }) => number;
 }) {
   const barWidth = useMemo(() => {
     const count = data.length;
@@ -109,10 +113,10 @@ function BarChart({
   const gap = isLongRange ? 'gap-px' : 'gap-[3px]';
 
   return (
-    <div className={`overflow-x-auto pb-1 ${isLongRange ? '' : ''}`}>
+    <div className="overflow-x-auto pb-1">
       <div className={`flex items-end ${gap}`} style={{ minWidth: data.length > 30 ? `${data.length * 12}px` : 'auto', height: '8rem' }}>
         {data.map((d) => {
-          const pct = (d.count !== undefined ? d.count : d.xp) / maxValue * 100;
+          const pct = getValue(d) / maxValue * 100;
           return (
             <div key={d.date} className={`${barWidth} flex flex-col items-center ${showLabel ? 'gap-1' : 'gap-0'} group relative`}>
               <div className="absolute bottom-full mb-1 hidden group-hover:block bg-bg-card border border-border text-xs text-text-primary px-2 py-1 rounded whitespace-nowrap z-10 shadow-lg">

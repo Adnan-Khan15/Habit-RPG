@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSupabase } from './hooks/useSupabase';
+import { useThemeStore } from './store/themeStore';
 import { OnboardingWizard } from './components/auth/OnboardingWizard';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -27,6 +28,7 @@ const queryClient = new QueryClient({
 
 function AppRoutes() {
   useSupabase();
+  useThemeStore(); // init theme on app root so CSS variables apply before any render
 
   return (
     <Routes>

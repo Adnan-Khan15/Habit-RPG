@@ -5,14 +5,16 @@ const tabs = [
   { to: '/dashboard/character', label: 'Char', icon: '👤' },
   { to: '/dashboard/store', label: 'Store', icon: '🏪' },
   { to: '/dashboard/social', label: 'Social', icon: '👥' },
+  { to: '/dashboard/analytics', label: 'Stats', icon: '📊' },
+  { to: '/dashboard/journal', label: 'Journal', icon: '📝' },
   { to: '/dashboard/profile', label: 'Profile', icon: '👤' },
   { to: '/dashboard/settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export function MobileTabBar() {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-bg-card border-t border-border">
-      <div className="flex items-center justify-around">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-bg-card border-t border-border overflow-x-auto">
+      <div className="flex items-center">
         {tabs.map((tab) => (
           <NavLink
             key={tab.to}

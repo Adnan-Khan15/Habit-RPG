@@ -1,14 +1,23 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../ui/Button';
 
 export function SignupForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const referralCode = searchParams.get('ref');
+
+  useEffect(() => {
+    if (referralCode) {
+      setError(`You were referred by code: ${referralCode}`);
+      setTimeout(() => setError(''), 3000);
+    }
+  }, [referralCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +36,17 @@ export function SignupForm() {
     }
 
     if (data.user) {
+      // Look up referrer if referral code was provided
+      let referredById: string | undefined;
+      if (referralCode) {
+        const { data: referrer } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('referral_code', referralCode)
+          .maybeSingle();
+        if (referrer) referredById = referrer.id;
+      }
+
       const { error: profileError } = await supabase.from('profiles').insert([
         {
           id: data.user.id,
@@ -34,6 +54,7 @@ export function SignupForm() {
           display_name: null,
           character_class: 'warrior',
           referral_code: crypto.randomUUID().slice(0, 8),
+          ...(referredById ? { referred_by: referredById } : {}),
         },
       ]);
 

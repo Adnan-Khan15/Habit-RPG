@@ -12,6 +12,9 @@ import SocialPage from './pages/SocialPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import AboutPage from './pages/AboutPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import JournalPage from './pages/JournalPage';
+import SkillsPage from './pages/SkillsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +42,9 @@ function AppRoutes() {
         <Route path="social" element={<SocialPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="journal" element={<JournalPage />} />
+        <Route path="skills" element={<SkillsPage />} />
         <Route path="about" element={<AboutPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard/tasks" replace />} />

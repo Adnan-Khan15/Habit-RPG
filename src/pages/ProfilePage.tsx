@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { ACHIEVEMENTS } from '../lib/xpFormulas';
 import { useQuery } from '@tanstack/react-query';
 import type { UserAchievement } from '../types';
+import { ReferralPanel } from '../components/profile/ReferralPanel';
 
 export default function ProfilePage() {
   const profile = useCharacterStore((s) => s.profile);
@@ -149,6 +150,8 @@ export default function ProfilePage() {
           Sign Out
         </Button>
       </div>
+
+      <ReferralPanel />
     </div>
   );
 }

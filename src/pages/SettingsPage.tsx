@@ -1,13 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCharacterStore } from '../store/characterStore';
 import { useAuthStore } from '../store/authStore';
+import { useThemeStore } from '../store/themeStore';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../lib/supabase';
 
 export default function SettingsPage() {
   const profile = useCharacterStore((s) => s.profile);
   const signOut = useAuthStore((s) => s.signOut);
+  const themeMode = useThemeStore((s) => s.mode);
+  const setThemeMode = useThemeStore((s) => s.setMode);
+  const [soundEnabled, setSoundEnabledState] = useState(
+    typeof window !== 'undefined' ? localStorage.getItem('habit_rpg_sound_enabled') !== 'false' : true
+  );
+
+  useEffect(() => {
+    localStorage.setItem('habit_rpg_sound_enabled', String(soundEnabled));
+  }, [soundEnabled]);
   const [resetTime, setResetTime] = useState(profile?.daily_reset_time?.slice(0, 5) ?? '00:00');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -69,6 +79,35 @@ export default function SettingsPage() {
           />
           <span className="text-sm text-text-primary">Reduced motion (disable animations)</span>
         </label>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={soundEnabled}
+            onChange={(e) => setSoundEnabledState(e.target.checked)}
+            className="w-4 h-4 rounded border-border bg-bg-card accent-accent-gold"
+          />
+          <span className="text-sm text-text-primary">Sound effects</span>
+        </label>
+      </section>
+
+      <section className="card space-y-4">
+        <h3 className="text-sm font-semibold text-text-muted uppercase">Theme</h3>
+        <div className="flex gap-2">
+          {(['dark', 'light', 'oled'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setThemeMode(mode)}
+              className={`flex-1 p-3 rounded-lg border text-sm capitalize transition-all ${
+                themeMode === mode
+                  ? 'border-accent-gold bg-accent-gold/10 text-accent-gold'
+                  : 'border-border bg-bg-card text-text-muted'
+              }`}
+            >
+              {mode === 'dark' ? '🌙 Dark' : mode === 'light' ? '☀️ Light' : '🖤 OLED'}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className="card space-y-4">

@@ -5,6 +5,14 @@ import { useCharacterStore } from '../store/characterStore';
 import type { InventoryItem } from '../types';
 import { ITEMS_CATALOGUE } from '../lib/xpFormulas';
 import { checkAchievements } from '../lib/achievementChecker';
+import { soundEffects } from '../lib/audio';
+
+const SOUND_KEY = 'habit_rpg_sound_enabled';
+function playSound(name: keyof typeof soundEffects) {
+  if (typeof window !== 'undefined' && localStorage.getItem(SOUND_KEY) !== 'false') {
+    try { soundEffects[name](); } catch {}
+  }
+}
 
 export function useStore() {
   const user = useAuthStore((s) => s.profile);
@@ -64,6 +72,7 @@ export function useStore() {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
 
       if (user && charProfile) {
+        playSound('coin');
         const [achievementsRes, inventoryRes] = await Promise.all([
           supabase.from('user_achievements').select('*').eq('user_id', user.id),
           supabase.from('inventory').select('id').eq('user_id', user.id),

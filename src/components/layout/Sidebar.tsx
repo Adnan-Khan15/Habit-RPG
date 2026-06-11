@@ -9,6 +9,8 @@ const navItems = [
   { to: '/dashboard/character', label: 'Character', icon: '👤' },
   { to: '/dashboard/store', label: 'Store', icon: '🏪' },
   { to: '/dashboard/social', label: 'Social', icon: '👥' },
+  { to: '/dashboard/analytics', label: 'Analytics', icon: '📊' },
+  { to: '/dashboard/journal', label: 'Journal', icon: '📝' },
   { to: '/dashboard/profile', label: 'Profile', icon: '👤' },
   { to: '/dashboard/settings', label: 'Settings', icon: '⚙️' },
   { to: '/dashboard/about', label: 'About', icon: '📖' },

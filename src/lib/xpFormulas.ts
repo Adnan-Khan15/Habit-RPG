@@ -157,3 +157,10 @@ export const ITEMS_CATALOGUE = [
   { id: 'weapon_dragon', name: 'Dragon Fang', description: 'Weapon carved from a dragon fang', slot: 'weapon', rarity: 'legendary', gold_cost: 2000, unlock_level: 30, sprite_key: 'weapon_dragon', icon_url: null },
   { id: 'accessory_dragon', name: 'Dragon Heart', description: 'Crystallised dragon heart', slot: 'accessory', rarity: 'legendary', gold_cost: 2000, unlock_level: 30, sprite_key: 'accessory_dragon', icon_url: null },
 ] as const;
+
+export const PETS = [
+  { id: 'pet_phoenix', name: 'Phoenix', description: 'A fiery companion', unlock_level: 5, gold_cost: 1000, sprite_key: 'pet_phoenix' },
+  { id: 'pet_dragonet', name: 'Dragonet', description: 'A tiny dragon', unlock_level: 10, gold_cost: 2000, sprite_key: 'pet_dragonet' },
+  { id: 'pet_fox', name: 'Spirit Fox', description: 'A mystical fox', unlock_level: 15, gold_cost: 3000, sprite_key: 'pet_fox' },
+  { id: 'pet_owl', name: 'Wise Owl', description: 'An ancient owl', unlock_level: 20, gold_cost: 4000, sprite_key: 'pet_owl' },
+] as const;

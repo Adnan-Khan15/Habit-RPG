@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { Task, Difficulty } from '../../types';
 import { HabitStreakBadge } from './HabitStreakBadge';
@@ -23,11 +23,44 @@ const typeIcons = { habit: '🔄', daily: '📅', todo: '📌' };
 
 export function TaskCard({ task, streak = 0, onComplete, onToggleNegative, onEdit, onDelete }: TaskCardProps) {
   const [isCompleting, setIsCompleting] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const swipeRef = useRef({ startX: 0, startY: 0, isDragging: false });
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    swipeRef.current = { startX: e.clientX, startY: e.clientY, isDragging: true };
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!swipeRef.current.isDragging) return;
+    const deltaX = e.clientX - swipeRef.current.startX;
+    const deltaY = e.clientY - swipeRef.current.startY;
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      setSwipeOffset(0);
+      return;
+    }
+    setSwipeOffset(Math.max(-150, Math.min(150, deltaX)));
+  };
+
+  const handlePointerUp = () => {
+    swipeRef.current.isDragging = false;
+    if (swipeOffset > 80) {
+      handleComplete();
+    } else if (swipeOffset < -80) {
+      setShowDeleteConfirm(true);
+    }
+    setSwipeOffset(0);
+  };
 
   const handleComplete = () => {
     setIsCompleting(true);
     setTimeout(() => setIsCompleting(false), 300);
     onComplete(task);
+  };
+
+  const handleDelete = () => {
+    onDelete(task);
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -36,7 +69,12 @@ export function TaskCard({ task, streak = 0, onComplete, onToggleNegative, onEdi
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -100 }}
-      className={`card-hover flex items-center gap-3 group ${
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={() => { swipeRef.current.isDragging = false; setSwipeOffset(0); }}
+      style={{ transform: `translateX(${swipeOffset}px)`, transition: swipeRef.current.isDragging ? 'none' : 'transform 0.2s ease' }}
+      className={`card-hover flex items-center gap-3 group touch-none select-none ${
         task.type === 'daily' && !task.is_completed
           ? 'border-l-accent-red border-l-2'
           : ''
@@ -102,20 +140,29 @@ export function TaskCard({ task, streak = 0, onComplete, onToggleNegative, onEdi
       </div>
 
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        {task.type === 'todo' && (
-          <span className={`text-xs px-1.5 py-0.5 rounded ${
-            task.priority === 'high' ? 'bg-accent-red/20 text-accent-red' :
-            task.priority === 'low' ? 'bg-gray-500/20 text-gray-400' :
-            'bg-white/5 text-text-muted'
-          }`}>
-            {task.priority}
-          </span>
+        {showDeleteConfirm ? (
+          <div className="flex items-center gap-1">
+            <button onClick={handleDelete} className="p-1 text-accent-red hover:bg-accent-red/10 rounded" title="Confirm delete">✓</button>
+            <button onClick={() => setShowDeleteConfirm(false)} className="p-1 text-text-muted hover:text-text-primary rounded" title="Cancel">✗</button>
+          </div>
+        ) : (
+          <>
+            {task.type === 'todo' && (
+              <span className={`text-xs px-1.5 py-0.5 rounded ${
+                task.priority === 'high' ? 'bg-accent-red/20 text-accent-red' :
+                task.priority === 'low' ? 'bg-gray-500/20 text-gray-400' :
+                'bg-white/5 text-text-muted'
+              }`}>
+                {task.priority}
+              </span>
+            )}
+            <button onClick={() => onDelete(task)} className="p-1 text-text-muted hover:text-accent-red">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" />
+              </svg>
+            </button>
+          </>
         )}
-        <button onClick={() => onDelete(task)} className="p-1 text-text-muted hover:text-accent-red">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" />
-          </svg>
-        </button>
       </div>
     </motion.div>
   );

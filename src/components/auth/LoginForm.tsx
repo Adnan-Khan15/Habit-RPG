@@ -25,10 +25,6 @@ export function LoginForm() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' });
-  };
-
   return (
     <div className="max-w-md mx-auto mt-20 p-6 card">
       <h2 className="text-2xl font-display text-accent-gold text-center mb-6">Welcome Back</h2>
@@ -62,16 +58,6 @@ export function LoginForm() {
           {loading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
-
-      <div className="my-4 flex items-center gap-3">
-        <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-text-muted">or</span>
-        <div className="flex-1 h-px bg-border" />
-      </div>
-
-      <Button variant="ghost" className="w-full border border-border" onClick={handleGoogleLogin}>
-        Continue with Google
-      </Button>
 
       <p className="text-center text-sm text-text-muted mt-4">
         No account?{' '}
